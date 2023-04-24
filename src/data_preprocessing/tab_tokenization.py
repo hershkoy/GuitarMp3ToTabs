@@ -32,31 +32,59 @@ class TabTokenizer:
         self.char2idx = data['char2idx'].item()
         self.idx2char = data['idx2char'].item()
 
+def gpx_to_tab_text(gpx_file):
+    tab_text = ""
+    gp = guitarpro.parse(gpx_file)
 
+    for track in gp.tracks:
+        for measure in track.measures:
+            tab_text += f"Track {track.number}: {track.name}\n"
+            for voice in measure.voices:
+                for beat in voice.beats:
+                    for note in beat.notes:
+                        tab_text += f"{note.string}-{note.value} "
+                    tab_text += "\n"
+    return tab_text
+
+def gpx_to_measure_tabs(gpx_file):
+    gp = guitarpro.parse(gpx_file)
+    measure_tabs = []
+
+    for track in gp.tracks:
+        for measure in track.measures:
+            measure_tab = ""
+
+            for voice in measure.voices:
+                for beat in voice.beats:
+                    for note in beat.notes:
+                        measure_tab += f"{note.string}-{note.value} "
+                    measure_tab += "\n"
+
+            measure_tabs.append(measure_tab)
+    return measure_tabs
 
 
 def tokenize_tabs(input_dir, output_dir, tokenizer_path):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    tab_files = glob(os.path.join(input_dir, "*.txt"))
-    tabs = []
+    tab_files = glob(os.path.join(input_dir, "*.gpx"))
+    all_measure_tabs = []
 
     for tab_file in tab_files:
-        with open(tab_file, "r", encoding="utf-8") as f:
-            tab = f.read()
-            tabs.append(tab)
+        measure_tabs = gpx_to_measure_tabs(tab_file)
+        all_measure_tabs.extend(measure_tabs)
 
     tokenizer = TabTokenizer()
-    tokenizer.fit(tabs)
+    tokenizer.fit(all_measure_tabs)
     tokenizer.save(tokenizer_path)
 
-    for tab_file, tab in zip(tab_files, tabs):
-        tokens = tokenizer.tokenize(tab)
+    for tab_file in tab_files:
+        measure_tabs = gpx_to_measure_tabs(tab_file)
+        tokens_list = [tokenizer.tokenize(measure_tab) for measure_tab in measure_tabs]
         output_file = os.path.join(output_dir, os.path.splitext(os.path.basename(tab_file))[0] + '.npy')
-        np.save(output_file, tokens)
+        np.save(output_file, tokens_list)
         print(f"Tokenized {tab_file} and saved to {output_file}")
-
 
 if __name__ == "__main__":
     input_dir = "../data/tabs"

@@ -1,56 +1,50 @@
 import os
 import librosa
-import pretty_midi
 import numpy as np
+from glob import glob
 
+def process_audio(input_file, output_file, time_signature):
+    y, sr = librosa.load(input_file, sr=None, mono=True)
+    tempo, beats = librosa.beat.beat_track(y, sr)
+    measures = group_beats_into_measures(beats, time_signature)
+    
+    measure_features = []
+    for measure in measures:
+        start, end = measure
+        y_measure = y[start:end]
+        mfcc = librosa.feature.mfcc(y_measure, sr, n_mfcc=13)
+        measure_features.append(mfcc.T)
+    
+    np.save(output_file, measure_features)
 
-def mp3_to_midi(input_path, output_path, sr=22050, hop_length=512, n_fft=2048):
-    # Load the mp3 file
-    audio_data, _ = librosa.load(input_path, sr=sr, mono=True)
-    
-    # Extract the chromagram
-    chromagram = librosa.feature.chroma_stft(audio_data, sr=sr, hop_length=hop_length, n_fft=n_fft)
-    
-    # Create a PrettyMIDI object
-    midi = pretty_midi.PrettyMIDI()
-    
-    # Define a starting time
-    start_time = 0.0
-    
-    # Iterate through the chromagram frames
-    for frame in chromagram.T:
-        # Get the pitch class with the highest energy
-        pitch_class = np.argmax(frame)
-        
-        # Create a new note
-        note = pretty_midi.Note(velocity=100, pitch=pitch_class + 60, start=start_time, end=start_time + 0.5)
-        
-        # Add the note to the MIDI file
-        instrument = pretty_midi.Instrument(program=0)
-        instrument.notes.append(note)
-        midi.instruments.append(instrument)
-        
-        # Increment the start time
-        start_time += 0.5
-    
-    # Write the MIDI file
-    midi.write(output_path)
+def group_beats_into_measures(beats, time_signature):
+    measure_beat_count = time_signature[0]
+    measures = []
+    for i in range(0, len(beats), measure_beat_count):
+        if i + measure_beat_count >= len(beats):
+            break
+        start = beats[i]
+        end = beats[i + measure_beat_count]
+        measures.append((start, end))
+    return measures
 
-
-def convert_audio_to_midi(input_dir, output_dir):
+def convert_all_audio_files(input_dir, output_dir, time_signature=(4, 4)):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    
-    for root, _, files in os.walk(input_dir):
-        for file in files:
-            if file.lower().endswith('.mp3'):
-                input_path = os.path.join(root, file)
-                output_path = os.path.join(output_dir, os.path.splitext(file)[0] + '.midi')
-                mp3_to_midi(input_path, output_path)
-                print(f"Converted {input_path} to {output_path}")
 
+    audio_files = glob(os.path.join(input_dir, "*.mp3"))
+
+    for audio_file in audio_files:
+        output_file = os.path.join(output_dir, os.path.splitext(os.path.basename(audio_file))[0] + '.npy')
+        process_audio(audio_file, output_file, time_signature)
+        print(f"Processed {audio_file} and saved to {output_file}")
 
 if __name__ == "__main__":
-    input_dir = "../data/raw_audio/artist"  # Replace with the path to your .mp3 files
-    output_dir = "../data/midi"
-    convert_audio_to_midi(input_dir, output_dir)
+    input_dir = "../data/audio"
+    output_dir = "../data/preprocessed/audio_features"
+    
+    # Adjust time_signature if needed
+    time_signature = (6, 8)
+
+    convert_all_audio_files(input_dir, output_dir, time_signature)
+

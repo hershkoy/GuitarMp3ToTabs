@@ -159,3 +159,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 guitar/
+data/raw_audio/
+data/tabs/artist/song1.gpx

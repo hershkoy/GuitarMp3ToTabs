@@ -1,57 +1,42 @@
 import os
-import random
-import shutil
+import numpy as np
 from glob import glob
+from sklearn.model_selection import train_test_split
 
+def synchronize_and_split_data(audio_input_dir, tab_input_dir, output_dir, test_size=0.1, random_state=42):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-def split_data(preprocessed_data_path, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1):
-    assert train_ratio + val_ratio + test_ratio == 1.0, "Ratios must sum to 1.0"
+    audio_files = sorted(glob(os.path.join(audio_input_dir, "*.npy")))
+    tab_files = sorted(glob(os.path.join(tab_input_dir, "*.npy")))
 
-    audio_features_path = os.path.join(preprocessed_data_path, "audio_features")
-    tokenized_tabs_path = os.path.join(preprocessed_data_path, "tokenized_tabs")
-    
-    # Create output directories if they don't exist
-    for subdir in ["train", "val", "test"]:
-        os.makedirs(os.path.join(audio_features_path, subdir), exist_ok=True)
-        os.makedirs(os.path.join(tokenized_tabs_path, subdir), exist_ok=True)
+    if len(audio_files) != len(tab_files):
+        raise ValueError("The number of audio files and tab files must be equal.")
 
-    # Get list of audio feature and tokenized tab files
-    audio_feature_files = sorted(glob(os.path.join(audio_features_path, "*.npy")))
-    tokenized_tab_files = sorted(glob(os.path.join(tokenized_tabs_path, "*.npy")))
+    X = []
+    Y = []
 
-    # Assert that audio feature files and tokenized tab files have the same length
-    assert len(audio_feature_files) == len(tokenized_tab_files), "Mismatch between audio features and tokenized tabs"
+    for audio_file, tab_file in zip(audio_files, tab_files):
+        audio_features = np.load(audio_file, allow_pickle=True)
+        tokenized_tabs = np.load(tab_file, allow_pickle=True)
 
-    # Shuffle the list of files using a seed for reproducibility
-    random.seed(42)
-    combined = list(zip(audio_feature_files, tokenized_tab_files))
-    random.shuffle(combined)
-    audio_feature_files[:], tokenized_tab_files[:] = zip(*combined)
+        if len(audio_features) != len(tokenized_tabs):
+            raise ValueError(f"File {audio_file} and {tab_file} must have the same number of measures.")
 
-    # Calculate the number of files for each split
-    total_files = len(audio_feature_files)
-    train_count = int(total_files * train_ratio)
-    val_count = int(total_files * val_ratio)
-    test_count = total_files - train_count - val_count
+        for feature, tab in zip(audio_features, tokenized_tabs):
+            X.append(feature)
+            Y.append(tab)
 
-    # Function to move files to output directories
-    def move_files(file_list, output_subdir):
-        for file_path in file_list:
-            shutil.move(file_path, os.path.join(os.path.dirname(file_path), output_subdir, os.path.basename(file_path)))
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=test_size, random_state=random_state)
 
-    # Move files to the respective output directories
-    move_files(audio_feature_files[:train_count], "train")
-    move_files(tokenized_tab_files[:train_count], "train")
-
-    move_files(audio_feature_files[train_count:train_count + val_count], "val")
-    move_files(tokenized_tab_files[train_count:train_count + val_count], "val")
-
-    move_files(audio_feature_files[train_count + val_count:], "test")
-    move_files(tokenized_tab_files[train_count + val_count:], "test")
-
-    print("Data split complete.")
-
+    np.save(os.path.join(output_dir, "X_train.npy"), X_train)
+    np.save(os.path.join(output_dir, "X_test.npy"), X_test)
+    np.save(os.path.join(output_dir, "Y_train.npy"), Y_train)
+    np.save(os.path.join(output_dir, "Y_test.npy"), Y_test)
 
 if __name__ == "__main__":
-    preprocessed_data_path = "../data/preprocessed"
-    split_data(preprocessed_data_path)
+    audio_input_dir = "../data/preprocessed/audio_features"
+    tab_input_dir = "../data/preprocessed/tokenized_tabs"
+    output_dir = "../data/preprocessed/synchronized"
+
+    synchronize_and_split_data(audio_input_dir, tab_input_dir, output_dir)
