@@ -35,8 +35,8 @@ def synchronize_and_split_data(audio_input_dir, tab_input_dir, output_dir, test_
     np.save(os.path.join(output_dir, "Y_test.npy"), Y_test)
 
 if __name__ == "__main__":
-    audio_input_dir = "../data/preprocessed/audio_features"
-    tab_input_dir = "../data/preprocessed/tokenized_tabs"
-    output_dir = "../data/preprocessed/synchronized"
+    audio_input_dir = os.path.join('..', 'data', 'preprocessed', 'audio_features')  
+    tab_input_dir = os.path.join('..', 'data', 'preprocessed', 'tokenized_tabs')
+    output_dir = os.path.join('..', 'data', 'preprocessed', 'synchronized') 
 
     synchronize_and_split_data(audio_input_dir, tab_input_dir, output_dir)

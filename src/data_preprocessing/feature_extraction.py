@@ -33,6 +33,6 @@ def extract_audio_features(input_dir, output_dir):
 
 
 if __name__ == "__main__":
-    input_dir = "../data/midi"
-    output_dir = "../data/preprocessed/audio_features"
+    input_dir = os.path.join('..', 'data', 'midi') 
+    output_dir = os.path.join('..', 'data', 'preprocessed', 'audio_features') 
     extract_audio_features(input_dir, output_dir)

@@ -160,4 +160,4 @@ cython_debug/
 #.idea/
 guitar/
 data/raw_audio/
-data/tabs/artist/song1.gpx
+data/tabs/

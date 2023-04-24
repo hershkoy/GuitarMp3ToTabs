@@ -87,8 +87,8 @@ def tokenize_tabs(input_dir, output_dir, tokenizer_path):
         print(f"Tokenized {tab_file} and saved to {output_file}")
 
 if __name__ == "__main__":
-    input_dir = "../data/tabs"
-    output_dir = "../data/preprocessed/tokenized_tabs"
+    input_dir = os.path.join('..', 'data', 'tabs')
+    output_dir = os.path.join('..', 'data', 'preprocessed', 'tokenized_tabs') 
     tokenizer_path = "tab_tokenizer.npz"
 
     tokenize_tabs(input_dir, output_dir, tokenizer_path)

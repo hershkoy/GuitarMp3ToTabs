@@ -40,8 +40,9 @@ def convert_all_audio_files(input_dir, output_dir, time_signature=(4, 4)):
         print(f"Processed {audio_file} and saved to {output_file}")
 
 if __name__ == "__main__":
-    input_dir = "../data/audio"
-    output_dir = "../data/preprocessed/audio_features"
+    input_dir = os.path.join('..', 'data', 'audio')  
+    output_dir = os.path.join('..', 'data', 'preprocessed', 'audio_features')  
+    
     
     # Adjust time_signature if needed
     time_signature = (6, 8)
