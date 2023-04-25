@@ -14,7 +14,7 @@ tf.random.set_seed(42)
 np.random.seed(42)
 
 
-def train_model():
+def train_model(model):
 
     # Load and preprocess data
     def load_data(audio_features_dir, tokenized_tabs_dir):
@@ -51,7 +51,6 @@ def train_model():
     # Model training parameters
     batch_size = 64
     epochs = 100
-    latent_dim = 256
     learning_rate = 0.001
 
     # Replace these paths with the paths to your preprocessed data
@@ -61,11 +60,6 @@ def train_model():
     # Load and preprocess the data
     X, y = load_data(train_audio_features_dir, train_tokenized_tabs_dir)
     X, y_input, y_output_one_hot = preprocess_data(X, y, max_output_sequence_length=100)
-
-    # Create and compile the model
-    input_dim = X.shape[-1]
-    output_dim = y_output_one_hot.shape[-1]
-    model = create_seq2seq_model(input_dim, output_dim, latent_dim)
 
     optimizer = Adam(learning_rate=learning_rate)
     loss = CategoricalCrossentropy()

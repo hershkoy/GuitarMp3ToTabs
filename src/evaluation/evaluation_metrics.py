@@ -1,6 +1,7 @@
+import os
 import numpy as np
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-from python_Levenshtein import distance as levenshtein_distance
+from Levenshtein import distance as levenshtein_distance
 
 
 def bleu_score(reference, candidate):
@@ -13,13 +14,30 @@ def bleu_score(reference, candidate):
 def edit_distance(reference, candidate):
     return levenshtein_distance(reference, candidate)
 
+def load_test_data(audio_features_dir, tokenized_tabs_dir):
+    X = []
+    y = []
 
-def evaluate_model(model, test_data, metric="bleu"):
+    audio_feature_files = sorted(os.listdir(audio_features_dir))
+    tokenized_tab_files = sorted(os.listdir(tokenized_tabs_dir))
+
+    for feature_file, tab_file in zip(audio_feature_files, tokenized_tab_files):
+        feature_path = os.path.join(audio_features_dir, feature_file)
+        tab_path = os.path.join(tokenized_tabs_dir, tab_file)
+
+        X.append(np.load(feature_path))
+        y.append(np.load(tab_path))
+
+    return X, y
+
+def evaluate_model(model, test_audio_features_dir, test_tokenized_tabs_dir, metric="bleu"):
+
     assert metric in ["bleu", "edit"], "Invalid metric"
+    X_test, y_test = load_test_data(test_audio_features_dir, test_tokenized_tabs_dir)
 
     scores = []
 
-    for input_features, ground_truth in test_data:
+    for input_features, ground_truth in zip(X_test, y_test):
         # Generate prediction using the model
         predicted_output = model.generate(input_features)
         
