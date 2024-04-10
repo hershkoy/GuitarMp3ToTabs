@@ -5,14 +5,14 @@ from glob import glob
 
 def process_audio(input_file, output_file, time_signature):
     y, sr = librosa.load(input_file, sr=None, mono=True)
-    tempo, beats = librosa.beat.beat_track(y, sr)
+    tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
     measures = group_beats_into_measures(beats, time_signature)
     
     measure_features = []
     for measure in measures:
         start, end = measure
         y_measure = y[start:end]
-        mfcc = librosa.feature.mfcc(y_measure, sr, n_mfcc=13)
+        mfcc = librosa.feature.mfcc(y=y_measure, sr=sr, n_mfcc=13)
         measure_features.append(mfcc.T)
     
     np.save(output_file, measure_features)

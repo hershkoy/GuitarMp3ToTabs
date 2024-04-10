@@ -8,7 +8,7 @@ def main():
     project_root = os.path.dirname(os.path.abspath(__file__))
 
     print("audio_conversion start")
-    audio_input_dir = os.path.join(project_root,'..', 'data', 'audio')  
+    audio_input_dir = os.path.join(project_root,'..', 'data', 'raw_audio')  
     audio_output_dir = os.path.join(project_root,'..', 'data', 'preprocessed', 'audio_features')  
     time_signature = (6, 8)   
     audio_conversion.convert_all_audio_files(audio_input_dir, audio_output_dir, time_signature)
